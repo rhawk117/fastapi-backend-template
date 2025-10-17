@@ -58,3 +58,26 @@ class LifespanState:
             secrets=secrets,
             jwks=jwks,
         )
+
+
+async def get_lifespan_state() -> LifespanState:
+    from app.settings import get_app_settings, get_secret_jwks, get_secret_settings
+
+    secrets = get_secret_settings()
+    settings = get_app_settings()
+    jwks = get_secret_jwks()
+    try:
+        state = LifespanState.create(
+            secrets,
+            settings,
+            jwks,
+        )
+        await state.initialize()
+    except Exception as e:
+        logger.critical(
+            f"{type(e).__name__}: Failed to initialize lifespan state",
+            exc_info=e
+        )
+        raise
+
+    return state

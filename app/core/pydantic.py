@@ -7,9 +7,8 @@ and methods are standardized from a centralized base class for easy
 propagation of changes.
 '''
 
-import dataclasses as dc
 import hashlib
-from typing import Any, Literal, Self
+from typing import Any, Literal, Self, TypedDict
 
 import msgspec
 from fastapi.exceptions import RequestValidationError
@@ -17,27 +16,25 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from pydantic_core import ErrorDetails
 
 
-class AliasGenerator:
-    @staticmethod
-    def to_camel_case(string: str) -> str:
-        '''
-        Pydantic alias generator to convert snake_case to camelCase
-        when `model_dump()` is called which automatically makes snake
-        case to camel case conversions for keys in dicts.
-        '''
-        words = string.split('_')
-        new_name = []
-        for i, word in enumerate(words):
-            if i:
-                new_name.append(word.capitalize())
-            else:
-                new_name.append(word.lower())
+def to_camel_case(string: str) -> str:
+    '''
+    Pydantic alias generator to convert snake_case to camelCase
+    when `model_dump()` is called which automatically makes snake
+    case to camel case conversions for keys in dicts.
+    '''
+    words = string.split('_')
+    new_name = []
+    for i, word in enumerate(words):
+        if i:
+            new_name.append(word.capitalize())
+        else:
+            new_name.append(word.lower())
 
-        return ''.join(new_name)
+    return ''.join(new_name)
 
-    @staticmethod
-    def kebab_case(string: str) -> str:
-        return string.replace('_', '-').lower()
+
+def kebab_case(string: str) -> str:
+    return string.replace('_', '-').lower()
 
 
 def parse_pydantic_error(details: ErrorDetails | Any) -> 'PydanticError':
@@ -63,34 +60,29 @@ def parse_pydantic_error(details: ErrorDetails | Any) -> 'PydanticError':
     )
 
 
-@dc.dataclass(slots=True)
-class PydanticError(BaseModel):
+class PydanticError(TypedDict):
     '''
     Normalized standard format for Pydantic validation errors
     '''
-
     field: str
     detail: str
     type: str
 
-    def message(self) -> str:
-        return f'Error on field "{self.field}": {self.detail} (type={self.type})'
-
 
 def normalize_validation_error(
     err: ValidationError | RequestValidationError
-) -> list[PydanticError]:
+) -> dict[str, PydanticError]:
 
-    errors = []
+    errors = {}
     for details in err.errors():
         loc = details.get('loc', ())
         field = '' if not loc else '.'.join(str(x) for x in loc)
 
-        errors.append(PydanticError(
+        errors[field] = PydanticError(
             field=field,
             detail=details.get('msg', 'Unknown error'),
             type=details.get('type', 'unknown_error'),
-        ))
+        )
 
     return errors
 

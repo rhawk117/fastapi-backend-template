@@ -3,9 +3,9 @@ import toml
 
 
 def get_secret_fields() -> dict:
-    from app.core.settings import get_secret_settings
+    from app.settings import get_secret_settings
 
-    
+
 
 
 

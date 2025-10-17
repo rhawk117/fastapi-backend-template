@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Self
 
-from app.core.settings import get_secret_settings
+from app.settings import get_secret_settings
 from app.main import get_app_settings
 
 if TYPE_CHECKING:

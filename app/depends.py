@@ -5,7 +5,7 @@ from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.life_span import LifespanState
-from app.core.settings import AppSettings, SecretSettings
+from app.settings import AppSettings, SecretSettings
 
 
 async def get_lifespan_context(request: Request) -> LifespanState:
