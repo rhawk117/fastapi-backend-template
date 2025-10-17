@@ -3,7 +3,7 @@ import logging
 import os
 from pathlib import Path
 
-from app.core.config_class import EnvConfig, TomlConfig, TomlSection
+from app.core.config_sources import EnvConfig, TomlConfig, TomlSection
 
 logger = logging.getLogger(__name__)
 
@@ -11,11 +11,16 @@ logger = logging.getLogger(__name__)
 class SecretSettings(EnvConfig):
 
     # model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
-
-    DATABASE_URL: str
+    _PG_DRIVERNAME: str = 'asyncpg'
+    PG_USER: str = 'appuser'
+    PG_PASSWORD: str = 'changeme'
+    PG_DATABASE_NAME: str = 'appdb'
+    PG_HOSTNAME: str = 'postgres'
+    PG_PORT: int = 5432
     JWT_PRIVATE_KEY: str
     JWT_PUBLIC_KEY: str
     CSRF_SECRET: str
+    REDIS_URL: str = 'redis://redis:6379/0'
 
 
 class ServerConfig(TomlSection):
@@ -57,10 +62,42 @@ class CORSPolicyConfig(TomlSection):
     allow_headers: list[str] = ['*']
 
 
+class RedisConfig(TomlSection):
+    socket_connect_timeout: int = 5
+    retry_on_timeout: bool = True
+    max_connections: int = 10
+    socket_keepalive: bool = True
+    decode_responses: bool = True
+    health_check_interval: int = 30
+    socket_timeout: int = 5
+
+
+class SqlalchemyConfig(TomlSection):
+    pool_size: int = 10
+    max_overflow: int = 20
+    pool_timeout: int = 30
+    pool_recycle: int = 1800
+    echo: bool = False
+    future: bool = True
+
+
+# class PostgresConfig(TomlSection):
+#     _DRIVERNAME: str = 'asyncpg'
+
+#     statement_timeout_sec: int = 30
+#     statement_cache_size: int = 100
+#     timezone: str = 'UTC'
+#     jit: bool = True
+#     command_timeout_sec: int = 60
+
+
 class AppSettings(TomlConfig):
     server: ServerConfig = ServerConfig()
     app: AppConfig = AppConfig()
     logger: LoggerConfig = LoggerConfig()
+    redis: RedisConfig = RedisConfig()
+    cors: CORSPolicyConfig = CORSPolicyConfig()
+    sql_alchemy: SqlalchemyConfig = SqlalchemyConfig()
 
 
 def know_app_settings() -> list[str]:
