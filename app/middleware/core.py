@@ -47,7 +47,25 @@ def register_exception_handlers(app: FastAPI) -> None:
     app : FastAPI
         The FastAPI application instance
     '''
-    from app.middleware.error_hooks import get_exception_hooks, register_error_hook
+    from app.middleware.error_hooks import (
+        GenericExceptionHandler,
+        HTTPErrorHandler,
+        StarleteHTTPException,
+        ValidationErrorHandler,
+        register_error_hook,
+    )
 
-    for error_hook in get_exception_hooks():
+    # NOTE: update hooks here, consider that the order matter
+    # ensure a exception is handled by the most specific handler
+    # generally, its from least to most broad.
+    # read the docs: https://fastapi.tiangolo.com/tutorial/handling-errors/#custom-exception-handlers
+
+    hook_order = [
+        HTTPErrorHandler,
+        ValidationErrorHandler,
+        StarleteHTTPException,
+        GenericExceptionHandler,
+    ]
+
+    for error_hook in hook_order:
         register_error_hook(error_hook, app)
