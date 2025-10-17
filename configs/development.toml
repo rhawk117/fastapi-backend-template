@@ -1,0 +1,25 @@
+version = "0.1.0"
+
+[app]
+name = "FastAPI Backend Template"
+description = "A template for building FastAPI applications."
+debug = true
+openapi_url = "/openapi.json"
+docs_url = "/docs"
+redoc_url = "/redoc"
+allow_doc_routes = true
+
+[cors]
+allow_origins = ["*"]
+allow_credentials = true
+allow_methods = ["*"]
+allow_headers = ["*"]
+
+[sql_alchemy]
+pool_size = 10
+max_overflow = 20
+pool_timeout = 30
+pool_recycle = 1800
+echo = true
+future = true
+

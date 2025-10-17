@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 from app.core.databases import PostgresDatabase, RedisDatabase
 
 if TYPE_CHECKING:
-    from app.core.settings import AppSettings
-    from app.router import SecretSettings
+    from app.core.settings import AppSettings, SecretSettings
 
 
 logger = logging.getLogger(__name__)
@@ -38,21 +37,22 @@ class LifespanState:
         await self.postgres_db.aclose()
         logger.info('All database connections disposed.')
 
+    @classmethod
+    def create(
+        cls,
+        secrets: SecretSettings,
+        settings: AppSettings,
+    ) -> Self:
 
-def create_lifespan_state(
-    settings: AppSettings,
-    secrets: SecretSettings,
-) -> LifespanState:
+        postgres_db = PostgresDatabase.create(secrets=secrets)
+        redis_db = RedisDatabase.create(
+            connection_config=settings.redis,
+            url=secrets.REDIS_URL
+        )
 
-    postgres_db = PostgresDatabase.create(secrets=secrets)
-    redis_db = RedisDatabase.create(
-        connection_config=settings.redis,
-        url=secrets.REDIS_URL
-    )
-
-    return LifespanState(
-        redis_db=redis_db,
-        postgres_db=postgres_db,
-        settings=settings,
-        secrets=secrets,
-    )
+        return cls(
+            redis_db=redis_db,
+            postgres_db=postgres_db,
+            settings=settings,
+            secrets=secrets,
+        )

@@ -1,32 +1,34 @@
-from __future__ import annotations
+import os
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
-from redis.asyncio import ConnectionPool, Redis
+import sqlalchemy as sa
+from fastapi import APIRouter
 
-from app.core.settings import SecretSettings
+from app.depends import PostgresDep, RedisDep, SettingsDep
 
-if TYPE_CHECKING:
-    from asyncpg import Pool
+api_router = APIRouter()
 
 
+@api_router.get('/', tags=['Root'])
+async def root() -> dict[str, bool]:
+    return {'ok': True}
 
 
-@dataclass
-class RedisConnection:
-    client: Redis
-    pool: ConnectionPool
+@api_router.get('/health', tags=['Health'])
+async def health_check(redis: RedisDep, pg_session: PostgresDep) -> dict[str, str]:
+
+    result = await pg_session.execute(sa.text('SELECT 1'))
+    pg_status = result.scalar_one_or_none()
+    redis_status = await redis.ping()
+    return {
+        'status': 'ok' if pg_status == 1 and redis_status else 'error',
+        'redis': 'ok' if redis_status else 'error',
+        'postgres': 'ok' if pg_status == 1 else 'error',
+    }
 
 
-def _create_redis_connection(secrets: SecretSettings) -> RedisConnection:
-    pool = ConnectionPool(
-        
-    )
-    client = Redis(connection_pool=pool)
-    return RedisConnection(client=client, pool=pool)
-
-
-@dataclass
-class LifespanState:
-    pg_pool: Pool
-    redis_connection: RedisConnection
+@api_router.get('/version', tags=['Version'])
+async def get_deployment_config(settings: SettingsDep) -> dict:
+    return {
+        'environment': os.getenv('ENVIRONMENT', 'development'),
+        'config': settings,
+    }

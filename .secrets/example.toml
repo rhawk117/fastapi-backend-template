@@ -1,0 +1,19 @@
+
+[pg]
+user = "appuser"
+password = "changeme"
+database_name = "appdb"
+hostname = "postgres"
+port = 5432
+
+[auth]
+jwt_private_key = """-----BEGIN PRIVATE KEY-----
+REPLACE-ME
+-----END PRIVATE KEY-----"""
+jwt_public_key = """-----BEGIN PUBLIC KEY-----
+REPLACE-ME
+-----END PUBLIC KEY-----"""
+csrf_secret = "REPLACE-ME"
+
+[redis]
+url = "redis://redis:6379/0"

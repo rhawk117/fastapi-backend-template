@@ -159,7 +159,7 @@ class PostgresDatabase:
         )
 
     @contextlib.asynccontextmanager
-    async def get_session(self):  # noqa: ANN201
+    async def local_session(self):  # noqa: ANN201
         """
         Context manager to get a new database session with rollbacks on
         exception

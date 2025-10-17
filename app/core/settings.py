@@ -11,15 +11,14 @@ logger = logging.getLogger(__name__)
 class SecretSettings(EnvConfig):
 
     # model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
-    _PG_DRIVERNAME: str = 'asyncpg'
     PG_USER: str = 'appuser'
     PG_PASSWORD: str = 'changeme'
     PG_DATABASE_NAME: str = 'appdb'
     PG_HOSTNAME: str = 'postgres'
     PG_PORT: int = 5432
-    JWT_PRIVATE_KEY: str
-    JWT_PUBLIC_KEY: str
-    CSRF_SECRET: str
+    AUTH_JWT_PRIVATE_KEY: str
+    AUTH_JWT_PUBLIC_KEY: str
+    AUTH_CSRF_SECRET: str
     REDIS_URL: str = 'redis://redis:6379/0'
 
 
@@ -29,14 +28,13 @@ class ServerConfig(TomlSection):
 
 
 class AppConfig(TomlSection):
-    environment: str = "development"
     name: str = "FastAPI Backend Template"
-    version: str = "0.1.0"
     description: str = "A template for building FastAPI applications."
     debug: bool = True
     openapi_url: str = "/openapi.json"
     docs_url: str = "/docs"
     redoc_url: str = "/redoc"
+    allow_doc_routes: bool = True
 
 
 class LoggerConfig(TomlSection):
@@ -92,6 +90,7 @@ class SqlalchemyConfig(TomlSection):
 
 
 class AppSettings(TomlConfig):
+    version: str = "0.1.0"
     server: ServerConfig = ServerConfig()
     app: AppConfig = AppConfig()
     logger: LoggerConfig = LoggerConfig()
@@ -106,14 +105,18 @@ def know_app_settings() -> list[str]:
 
 
 @functools.lru_cache
-def get_app_settings(*, environment: str = 'development') -> AppSettings:
-    toml_file_path = os.path.join('configs', f'app.{environment}.toml')
+def get_app_settings(*, environment: str | None = None) -> AppSettings:
+    if not environment:
+        environment = os.getenv('ENVIRONMENT', 'development')
+
+    toml_file_path = os.path.join('configs', f'{environment}.toml')
     if not os.path.exists(toml_file_path):
         known_files = know_app_settings()
         raise FileNotFoundError(
             f"Configuration file {toml_file_path} not found, "
             f"known files: {', '.join(known_files)}"
         )
+
     return AppSettings(_toml_file=f'configs/app.{environment}.toml')
 
 
