@@ -4,25 +4,26 @@ import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Self
 
-from app.core.databases import PostgresDatabase, RedisDatabase
+from app.databases import PostgresDatabase, RedisDatabase
 
 if TYPE_CHECKING:
-    from app.core.settings import AppSettings, SecretSettings
-
+    from app.core.configs import AppSettings
+    from app.core.secrets import JWKSecrets, SecretTomlSettings
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass(slots=True)
 class LifespanState:
-    """
+    '''
     Holds the state for the application lifespan, including database
     connections and settings.
-    """
+    '''
     redis_db: RedisDatabase
     postgres_db: PostgresDatabase
     settings: AppSettings
-    secrets: SecretSettings
+    secrets: SecretTomlSettings
+    jwks: JWKSecrets
 
     async def initialize(self) -> None:
         logger.info('Testing if redis is reachable...')
@@ -40,19 +41,20 @@ class LifespanState:
     @classmethod
     def create(
         cls,
-        secrets: SecretSettings,
+        secrets: SecretTomlSettings,
         settings: AppSettings,
+        jwks: JWKSecrets,
     ) -> Self:
 
-        postgres_db = PostgresDatabase.create(secrets=secrets)
+        postgres_db = PostgresDatabase.create(pg_secrets=secrets.postgres)
         redis_db = RedisDatabase.create(
-            connection_config=settings.redis,
-            url=secrets.REDIS_URL
+            connection_config=settings.redis_connection,
+            url=secrets.redis.get_url(),
         )
-
         return cls(
             redis_db=redis_db,
             postgres_db=postgres_db,
             settings=settings,
             secrets=secrets,
+            jwks=jwks,
         )

@@ -4,7 +4,7 @@ from fastapi import Depends, Request
 from redis.asyncio import Redis
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.life_span import LifespanState
+from app.life_span import LifespanState
 from app.core.settings import AppSettings, SecretSettings
 
 

@@ -1,11 +1,11 @@
-"""
+'''
 range_monitor.core.schema
 
 Common pydantic models and utilities for use throughout the application
 so that common behaviors such as serialization, validation,
 and methods are standardized from a centralized base class for easy
 propagation of changes.
-"""
+'''
 
 import dataclasses as dc
 import hashlib
@@ -20,11 +20,11 @@ from pydantic_core import ErrorDetails
 class AliasGenerator:
     @staticmethod
     def to_camel_case(string: str) -> str:
-        """
+        '''
         Pydantic alias generator to convert snake_case to camelCase
         when `model_dump()` is called which automatically makes snake
         case to camel case conversions for keys in dicts.
-        """
+        '''
         words = string.split('_')
         new_name = []
         for i, word in enumerate(words):
@@ -41,7 +41,7 @@ class AliasGenerator:
 
 
 def parse_pydantic_error(details: ErrorDetails | Any) -> 'PydanticError':
-    """
+    '''
     Parses a single `ErrorDetails` from a validation error PydanticError
     into a human readable format
     Parameters
@@ -52,7 +52,7 @@ def parse_pydantic_error(details: ErrorDetails | Any) -> 'PydanticError':
     Returns
     -------
     PydanticError
-    """
+    '''
     loc = details.get('loc', ())
     field = '' if not loc else '.'.join(str(x) for x in loc)
 
@@ -65,9 +65,9 @@ def parse_pydantic_error(details: ErrorDetails | Any) -> 'PydanticError':
 
 @dc.dataclass(slots=True)
 class PydanticError(BaseModel):
-    """
+    '''
     Normalized standard format for Pydantic validation errors
-    """
+    '''
 
     field: str
     detail: str
@@ -96,10 +96,10 @@ def normalize_validation_error(
 
 
 class PydanticModel(BaseModel):
-    """
+    '''
     The base pydantic schema for use in all pydantic models
     with common utility methods to standardize behavior.
-    """
+    '''
 
     model_config = ConfigDict(
         use_enum_values=True,
@@ -123,7 +123,7 @@ class PydanticModel(BaseModel):
         mode: Literal['json', 'python'] = 'python',
         by_alias: bool = False,
     ) -> dict:
-        """
+        '''
         utility `.model_dump()` method to generalize behaviors across
         all models.
         Sets `exclude_unset=True` and `exclude_none=True`
@@ -131,7 +131,7 @@ class PydanticModel(BaseModel):
         Returns
         -------
         dict
-        """
+        '''
         return self.model_dump(
             exclude_none=exclude_none,
             exclude_unset=exclude_unset,
@@ -146,7 +146,7 @@ class PydanticModel(BaseModel):
         exclude_none: bool = True,
         order: Literal['deterministic', 'sorted'] | None = None,
     ) -> str:
-        """
+        '''
         utility `.model_dump_json()` method to generalize behaviors across
         all models.
         Sets `exclude_none=True` and `by_alias=True` by default.
@@ -154,7 +154,7 @@ class PydanticModel(BaseModel):
         Returns
         -------
         str
-        """
+        '''
         schema = self.dump(
             by_alias=by_alias,
             exclude_none=exclude_none,
@@ -162,11 +162,11 @@ class PydanticModel(BaseModel):
         return msgspec.json.encode(schema, order=order).decode('utf-8')
 
     def to_hash(self) -> str:
-        """
+        '''
         Stable schema hash (good for cache keys / idempotency keys)
         using sha256 over the jsonable dict representation. The keys
         are sorted to ensure stability.
-        """
+        '''
         json_str = msgspec.json.encode(
             self.dump(exclude_none=True, by_alias=True),
             order='sorted'

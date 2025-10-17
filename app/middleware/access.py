@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.core import log
+from app import log
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable

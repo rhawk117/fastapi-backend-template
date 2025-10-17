@@ -2,26 +2,26 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Self
 
+from app.core.settings import get_secret_settings
+from app.main import get_app_settings
+
 if TYPE_CHECKING:
 
     from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker
 
-    from app.core.settings import RedisConfig
-    from app.router import SecretSettings
+    from app.core.configs import RedisConfig
+    from app.core.secrets import PostgresSecrets
 
 import contextlib
 import logging
 from dataclasses import dataclass
 
 from redis.asyncio import ConnectionPool, Redis
-from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
-
-from app.core.settings import get_app_settings, get_secret_settings
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ class RedisDatabase:
 
     @classmethod
     def create(cls, connection_config: RedisConfig, url: str | None = None) -> Self:
-        """
+        '''
         Create a new RedisDatabase instance
 
         Parameters
@@ -70,36 +70,14 @@ class RedisDatabase:
         Returns
         -------
         Self
-        """
+        '''
         if url is None:
             secrets = get_secret_settings()
-            url = secrets.REDIS_URL
+            url = secrets.redis.get_url()
+
         pool = ConnectionPool.from_url(url, **connection_config.model_dump())
         client = Redis(connection_pool=pool)
         return cls(pool=pool, client=client, url=url)
-
-
-# @dataclass(slots=True)
-# class PostgresDatabase:
-#     url: str
-#     async_engine: AsyncEngine
-#     sessionlocal: async_sessionmaker[AsyncSession]
-
-def create_postgres_url(
-    drivername: str,
-    *,
-    secrets: SecretSettings | None = None,
-) -> URL:
-    if secrets is None:
-        secrets = get_secret_settings()
-
-    return URL.create(
-        drivername=drivername,
-        username=secrets.PG_USER,
-        host=secrets.PG_HOSTNAME,
-        port=secrets.PG_PORT,
-        database=secrets.PG_DATABASE_NAME,
-    )
 
 
 @dataclass(slots=True)
@@ -109,8 +87,8 @@ class PostgresDatabase:
     url: str
 
     @classmethod
-    def create(cls, *, secrets: SecretSettings | None = None) -> Self:
-        """
+    def create(cls, *, pg_secrets: PostgresSecrets | None = None) -> Self:
+        '''
         Create a new PostgresDatabase instance
 
         Parameters
@@ -124,14 +102,11 @@ class PostgresDatabase:
         -------
         Self
             The created PostgresDatabase instance
-        """
-        secrets = secrets or get_secret_settings()
+        '''
+        pg_secrets = pg_secrets or get_secret_settings().postgres
         sa_config = get_app_settings().sql_alchemy
 
-        url = create_postgres_url(
-            'postgresql+asyncpg',
-            secrets=secrets
-        )
+        url = pg_secrets.get_url()
 
         engine = create_async_engine(
             url,
@@ -160,7 +135,7 @@ class PostgresDatabase:
 
     @contextlib.asynccontextmanager
     async def local_session(self):  # noqa: ANN201
-        """
+        '''
         Context manager to get a new database session with rollbacks on
         exception
 
@@ -171,7 +146,7 @@ class PostgresDatabase:
         Yields
         ------
         Iterator[AsyncGenerator[AsyncSession]]
-        """
+        '''
         async with self.sessionmaker() as session:
             try:
                 yield session

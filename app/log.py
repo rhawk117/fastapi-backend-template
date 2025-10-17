@@ -26,7 +26,7 @@ from app.core.correlation_id import get_correlation_id
 if TYPE_CHECKING:
     from loguru import Logger, Record
 
-    from app.core.settings import LoggerConfig
+    from app.core.configs import LoggerConfig
 
 
 def _create_file_sink(name: str) -> str:
@@ -51,11 +51,11 @@ def _correlation_id_patch(record: Record) -> None:
 
 
 class InterceptHandler(logging.Handler):
-    """
+    '''
     Ensures stdlib logs go through loguru allowing
     for the use of the standard logging library in
     3rd party libraries while still having all logs
-    """
+    '''
 
     def emit(self, record: logging.LogRecord) -> None:
         try:
@@ -74,10 +74,10 @@ class InterceptHandler(logging.Handler):
 
 
 def add_stream_loggers(config: LoggerConfig) -> None:
-    """
+    '''
     Adds stream loggers to the loguru logger instance,
     for both stdout and stderr.
-    """
+    '''
     stream_config = {
         'format': config.format.strip(),
         'colorize': True,
@@ -101,14 +101,14 @@ def add_stream_loggers(config: LoggerConfig) -> None:
 
 
 def add_struct_loggers(config: LoggerConfig) -> None:
-    """
+    '''
     Adds structured file loggers to the loguru logger instance.
 
     Parameters
     ----------
     config : LoggerConfig
         The logger configuration settings.
-    """
+    '''
     file_options = {
         'rotation': f'{config.rotation_mb} MB',
         'retention': f'{config.retention_days} days',
@@ -142,14 +142,14 @@ def add_struct_loggers(config: LoggerConfig) -> None:
 
 
 def initialize_logger(config: LoggerConfig) -> None:
-    """
+    '''
     Configures the application logger based on the provided configuration.
 
     Parameters
     ----------
     config : LoggerConfig
         The logger configuration settings.
-    """
+    '''
     loguru_logger.remove()
     logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
 
@@ -171,19 +171,19 @@ def initialize_logger(config: LoggerConfig) -> None:
 
 
 def get_binded_loguru(**extras) -> Logger:
-    """
+    '''
     Binds extra fields to the logger for structured logging.
 
     Parameters
     ----------
     **extras : dict
         Additional fields to bind to the logger.
-    """
+    '''
     return loguru_logger.bind(**extras)
 
 
 def get_logger() -> Logger:
-    """
+    '''
     Returns the configured loguru logger instance.
-    """
+    '''
     return loguru_logger

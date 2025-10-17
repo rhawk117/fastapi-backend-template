@@ -1,4 +1,4 @@
-
+version: "3.9"
 
 x-env: &x-env
   APP_CONFIG_FILE: ${APP_CONFIG_FILE:-/configs/app.dev.toml}
@@ -17,7 +17,7 @@ services:
       POSTGRES_USER: ${PGUSER:-app}
       POSTGRES_PASSWORD: ${PGPASSWORD:-app}
       POSTGRES_DB: ${PGDATABASE:-app}
-    volumes: [ "pgdata:/var/lib/postgresql/data" ]
+    volumes: ["pgdata:/var/lib/postgresql/data"]
     ports:
       - target: 5432
         published: 5432
@@ -32,7 +32,7 @@ services:
   redis:
     image: redis:7
     command: ["redis-server", "--appendonly", "yes"]
-    volumes: [ "redisdata:/data" ]
+    volumes: ["redisdata:/data"]
     ports:
       - target: 6379
         published: 6379

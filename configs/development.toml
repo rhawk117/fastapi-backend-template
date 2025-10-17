@@ -23,3 +23,20 @@ pool_recycle = 1800
 echo = true
 future = true
 
+[logger]
+# format = "good default"
+level = 'DEBUG'
+retention_days = 7
+rotation_mb = 5
+compression = 'zip'
+security_level_no = 25
+structured_logs = true
+
+[redis]
+socket_connect_timeout = 5
+retry_on_timeout = true
+max_connections = 10
+socket_keepalive = true
+decode_responses = true
+health_check_interval = 30
+socket_timeout = 5

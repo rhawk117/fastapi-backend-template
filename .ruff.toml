@@ -138,19 +138,25 @@ ignore = [
     "RUF012",
     "TRY400",
     "TRY003",
-    "TRY301"
+    "TRY301",
 ]
 
 [lint.flake8-quotes]
 inline-quotes = "single"
+docstring-quotes = "single"
 
 [lint.flake8-type-checking]
-runtime-evaluated-base-classes = ["pydantic.BaseModel", "sqlalchemy.orm.DeclarativeBase"]
+runtime-evaluated-base-classes = [
+    "pydantic.BaseModel",
+    "sqlalchemy.orm.DeclarativeBase",
+]
 
 [lint.pylint]
 allow-dunder-method-names = ["__tablename__", "__table_args__"]
 
+
 [format]
 docstring-code-format = true
+
 preview = true
 quote-style = "single"
