@@ -1,13 +1,8 @@
 import contextlib
-import functools
 import logging
-import os
-from pathlib import Path
 
 import asyncpg
 from fastapi import FastAPI
-
-from app.core._config_class import EnvConfig, TomlConfig, TomlSection
 
 logger = logging.getLogger(__name__)
 
@@ -26,14 +21,10 @@ async def lifespan(app: FastAPI):
         logger.info("===== ASGI Lifespan Shutdown =====")
 
 
-
-
-
 def create_app() -> FastAPI:
     app = FastAPI(
         title="FastAPI Backend Template",
         lifespan=lifespan,
     )
-
 
     return app

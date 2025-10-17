@@ -49,7 +49,7 @@ class RedisDatabase:
         async with _log_connection_failure('Redis'):
             await self.client.ping()
 
-    async def close(self) -> None:
+    async def aclose(self) -> None:
         logger.info("Closing Redis connection...")
         await self.client.aclose()
         await self.pool.disconnect()
@@ -182,3 +182,7 @@ class PostgresDatabase:
                     exc_info=True
                 )
                 raise
+
+    async def aclose(self) -> None:
+        logger.info("Closing Postgres connection...")
+        await self.async_engine.dispose()
