@@ -1,0 +1,92 @@
+
+
+x-env: &x-env
+  APP_CONFIG_FILE: ${APP_CONFIG_FILE:-/configs/app.dev.toml}
+  DATABASE_URL: ${DATABASE_URL}
+  REDIS_URL: ${REDIS_URL}
+  JWT_PRIVATE_KEY_PEM: ${JWT_PRIVATE_KEY_PEM}
+  JWT_PUBLIC_KEY_PEM: ${JWT_PUBLIC_KEY_PEM}
+  CSRF_SECRET: ${CSRF_SECRET}
+
+# TODO: fix env vars, makefile, toml to env script, docs
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${PGUSER:-app}
+      POSTGRES_PASSWORD: ${PGPASSWORD:-app}
+      POSTGRES_DB: ${PGDATABASE:-app}
+    volumes: [ "pgdata:/var/lib/postgresql/data" ]
+    ports:
+      - target: 5432
+        published: 5432
+        protocol: tcp
+        mode: host
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PGUSER:-app}"]
+      interval: 2s
+      retries: 30
+    profiles: ["dev"]
+
+  redis:
+    image: redis:7
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [ "redisdata:/data" ]
+    ports:
+      - target: 6379
+        published: 6379
+        protocol: tcp
+        mode: host
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      retries: 30
+    profiles: ["dev"]
+
+  api:
+    build:
+      context: ./backend
+    environment:
+      <<: *x-env
+    env_file:
+      - .env
+    volumes:
+      - ./configs:/configs:ro
+      - ./backend:/app:cached
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "8000:8000"
+    command: >
+      bash -lc "
+      uv run python app/scripts/validate_env.py &&
+      uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+      "
+    profiles: ["dev"]
+
+  api-prod:
+    build:
+      context: ./backend
+    environment:
+      <<: *x-env
+      APP_CONFIG_FILE: ${APP_CONFIG_FILE:-/configs/app.prod.toml}
+    env_file:
+      - .env
+    volumes:
+      - ./configs:/configs:ro
+    ports:
+      - "8000:8000"
+    command: >
+      bash -lc "
+      uv run python app/scripts/validate_env.py &&
+      uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
+      "
+    profiles: ["prod"]
+
+volumes:
+  pgdata: {}
+  redisdata: {}

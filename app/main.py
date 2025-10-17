@@ -4,6 +4,7 @@ import logging
 from fastapi import FastAPI
 
 from app.core.life_span import LifespanState
+from app.core.log import initialize_logger
 from app.core.settings import get_app_settings, get_secret_settings
 
 logger = logging.getLogger(__name__)
@@ -47,8 +48,10 @@ async def lifespan(app: FastAPI):  # noqa: ANN201
 def create_app() -> FastAPI:
     from app.middleware.core import register_middleware
     from app.router import api_router
-
     settings = get_app_settings()
+
+    initialize_logger(settings.logger)
+
     app = FastAPI(
         title=settings.app.name,
         version=settings.version,
