@@ -69,7 +69,8 @@ def env_model_dump_serializer(
         env_key = f"{prefix}{key.upper()}"
         if isinstance(value, dict):
             nested_dict = env_model_dump_serializer(
-                value, prefix=f"{env_key}_")
+                value, prefix=f"{env_key}_"
+            )
             env_dict.update(nested_dict)
         else:
             env_dict[env_key] = _env_serialize_field(value)

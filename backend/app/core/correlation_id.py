@@ -1,3 +1,10 @@
+'''NOTE
+yes i know an existing package for correlation ids already but this is such
+an easy package to implement and not worth the
+extra dependency for such a small amount of code
+that is slower due to extra abstraction layers
+and is more specific for my use case.
+'''
 from __future__ import annotations
 
 import uuid
@@ -11,7 +18,9 @@ if TYPE_CHECKING:
 
 
 _correlation_id: ContextVar[str] = ContextVar(
-    'correlation_id', default='not-set')
+    'correlation_id',
+    default='not-set'
+)
 
 
 def generate() -> str:
@@ -51,7 +60,6 @@ def _get_from_headers(header_name: bytes, headers: list[tuple[Any, Any]]) -> str
 
 
 class CorrelationMiddleware:
-
     __slot__ = ('app', '_factory', '_header_name')
 
     def __init__(

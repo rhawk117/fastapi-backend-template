@@ -1,7 +1,7 @@
 import abc
 from typing import TypeVar, cast
 
-from fastapi import BackgroundTasks, FastAPI
+from fastapi import BackgroundTasks
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -34,14 +34,6 @@ class ErrorHook[E: Exception](abc.ABC):
 
     @abc.abstractmethod
     def get_response_model(self, exception: E) -> ErrorResponseModel: ...
-
-    def add_to_api(cls, app: FastAPI) -> None:
-        this = cls()
-        handler = _HookDispatcher(this)
-        app.add_exception_handler(
-            this.handles,
-            handler=handler,
-        )
 
 
 class APIErrorHandler[E: Exception]:

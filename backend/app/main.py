@@ -66,7 +66,7 @@ def create_app() -> FastAPI:
     Returns
     -------
     FastAPI
-        
+        The runnable ASGI FastAPI application
     '''
     settings = get_app_settings()
 

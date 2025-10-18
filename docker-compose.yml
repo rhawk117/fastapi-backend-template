@@ -18,6 +18,7 @@ services:
       POSTGRES_PASSWORD: ${PGPASSWORD:-app}
       POSTGRES_DB: ${PGDATABASE:-app}
     volumes: ["pgdata:/var/lib/postgresql/data"]
+    profiles: ["dev"]
     ports:
       - target: 5432
         published: 5432
@@ -27,22 +28,23 @@ services:
       test: ["CMD-SHELL", "pg_isready -U ${PGUSER:-app}"]
       interval: 2s
       retries: 30
-    profiles: ["dev"]
 
   redis:
-    image: redis:7
+    image: redis:8
     command: ["redis-server", "--appendonly", "yes"]
     volumes: ["redisdata:/data"]
+    profiles: ["dev"]
     ports:
       - target: 6379
         published: 6379
         protocol: tcp
         mode: host
+
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 2s
       retries: 30
-    profiles: ["dev"]
+
 
   api:
     build:

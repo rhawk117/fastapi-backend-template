@@ -32,6 +32,21 @@ class ErrorResponseModel(PydanticModel):
     )
 
 
+class ApiRequestModel(PydanticModel):
+    model_config = SettingsConfigDict(
+        alias_generator=to_camel_case,
+        extra='forbid',
+        str_strip_whitespace=True,
+    )
+
+
+class ApiResponseModel(PydanticModel):
+    model_config = SettingsConfigDict(
+        alias_generator=to_camel_case,
+        extra='ignore',
+    )
+
+
 class ApiJsonResponse(JSONResponse):
     """
     A faster JSON response class using msgspec for serialization
@@ -49,18 +64,3 @@ class ApiJsonResponse(JSONResponse):
             content = content.model_dump()
 
         return msgspec.json.encode(content)
-
-
-class ApiRequestModel(PydanticModel):
-    model_config = SettingsConfigDict(
-        alias_generator=to_camel_case,
-        extra='forbid',
-        str_strip_whitespace=True,
-    )
-
-
-class ApiResponseModel(PydanticModel):
-    model_config = SettingsConfigDict(
-        alias_generator=to_camel_case,
-        extra='ignore',
-    )

@@ -1,3 +1,3 @@
 creation_rules:
   - path_regex: secrets/.*\.enc\.toml$
-    age: ["REPLACE_WITH_AGE_PUBLIC_KEY"]
+    age: ["age1jcg6dyc95m7cs85v305gn4a2dfgsxgnrplllfu90yhh99lckscuqdss2zl"]

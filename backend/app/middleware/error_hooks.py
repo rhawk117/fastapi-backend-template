@@ -157,20 +157,3 @@ class GenericExceptionHandler(ErrorHook[Exception]):
             error_code=type(exception).__name__,
             detail='Oops, something messed on our end. Please try again later.',
         )
-
-
-def get_exception_hooks() -> list[type[ErrorHook]]:
-    '''
-    Get a list of all registered error handlers
-
-    Returns
-    -------
-    list[ErrorHook]
-        A list of all registered error handlers
-    '''
-    return [
-        HTTPErrorHandler,
-        ValidationErrorHandler,
-        StarletteErrorHandler,
-        GenericExceptionHandler,
-    ]
