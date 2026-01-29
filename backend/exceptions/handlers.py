@@ -100,10 +100,10 @@ async def handle_generic_exception(
 
 
 
-RegisteredExceptionHandlers = {
+registered_exception_handlers = {
     ServerError: handle_server_error,
     RequestValidationError: handle_validation_error,
     Exception: handle_generic_exception,
 }
 
-__all__ = ('RegisteredExceptionHandlers',)
+__all__ = ('registered_exception_handlers',)
