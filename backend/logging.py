@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 from loguru import logger as loguru_logger
 
 from backend import constants
-from backend.core.correlation import get_correlation_id
+from backend.common.correlation import get_correlation_id
 
 if TYPE_CHECKING:
     from loguru import Logger, Record
