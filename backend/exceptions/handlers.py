@@ -8,7 +8,7 @@ import logging
 from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError
 
-from backend.errors.base import ServerError
+from backend.exceptions.base import ServerError
 from backend.responses import APIResponse
 from backend.schemas.errors import PydanticError
 
