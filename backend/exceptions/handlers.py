@@ -59,7 +59,7 @@ async def handle_server_error(request: Request, exception: ServerError) -> APIRe
         metadata=exception.meta,
     )
 
-    return APIResponse.domain_problem(
+    return APIResponse.from_exception(
         domain_error=exception,
         headers=dict(exception.headers or {}),
     )

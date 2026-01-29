@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from fastapi.exceptions import RequestValidationError
     from pydantic_core import ErrorDetails
 
-    from backend.exceptions import ServerError
+    from backend.exceptions.base import ServerError
 
 
 @dc.dataclass(slots=True)
@@ -68,7 +68,7 @@ class ErrorContent(PydanticSchema):
     context: dict[str, Any] | None = None
 
     @classmethod
-    def from_domain_error(cls, error: ServerError) -> Self:
+    def from_server_error(cls, error: ServerError) -> Self:
         return cls(
             error_type=error.__class__.__name__,
             status=error.status_code,

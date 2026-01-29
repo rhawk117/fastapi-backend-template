@@ -3,40 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Self
 
 from fastapi.responses import JSONResponse
-from pydantic import ConfigDict
 
+from backend.schemas.errors import ErrorContent, ServerError
 from backend.utils.correlation import get_correlation_id
 from backend.utils.encoders import EncodableResponses, JSONEncoder
-from backend.schemas.base import PydanticSchema, camel_case_alias_generator
 
 if TYPE_CHECKING:
     from fastapi import BackgroundTasks
 
-    from backend.exceptions import DomainError, ServerError
-
-
-class ErrorContent(PydanticSchema):
-    model_config = ConfigDict(
-        alias_generator=camel_case_alias_generator,
-        extra='forbid',
-    )
-
-    error_type: str
-    status: int
-    code: str
-    message: str
-    correlation_id: str
-    context: dict[str, Any] | None = None
-
-    @classmethod
-    def from_domain_error(cls, error: ServerError) -> Self:
-        return cls(
-            error_type=error.__class__.__name__,
-            status=error.status_code,
-            code=error.code,
-            message=error.public,
-            correlation_id=get_correlation_id(default='N/A'),
-        )
 
 
 class APIResponse(JSONResponse):
@@ -108,14 +82,14 @@ class APIResponse(JSONResponse):
         )
 
     @classmethod
-    def domain_problem(
+    def from_exception(
         cls,
-        domain_error: DomainError,
+        domain_error: ServerError,
         *,
         headers: dict[str, str] | None = None,
     ) -> Self:
         return cls(
-            content=ErrorContent.from_domain_error(domain_error),
+            content=ErrorContent.from_server_error(domain_error),
             status_code=domain_error.status_code,
             headers=headers,
         )
