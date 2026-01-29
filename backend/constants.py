@@ -11,3 +11,9 @@ LOGGER_FORMAT = (
     '<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> | '
     '<level>{message}</level>'
 )
+
+DOCUMENTATION_URLS = {
+    'openapi_url': '/openapi.json',
+    'redoc_url': '/redoc',
+    'docs_url': '/swagger_ui',
+}
