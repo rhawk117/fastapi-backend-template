@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Self
 
 from pydantic import ConfigDict, ValidationError
 
-from backend.common.correlation import get_correlation_id
+from backend.utils.correlation import get_correlation_id
 from backend.schemas.base import PydanticSchema, camel_case_alias_generator
 
 if TYPE_CHECKING:

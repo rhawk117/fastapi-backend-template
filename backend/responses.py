@@ -1,13 +1,18 @@
-from typing import Any, Self
+from __future__ import annotations
 
-from fastapi import BackgroundTasks
+from typing import TYPE_CHECKING, Any, Self
+
 from fastapi.responses import JSONResponse
 from pydantic import ConfigDict
 
-from backend.common.correlation import get_correlation_id
-from backend.common.encoders import EncodableResponses, JSONEncoder
-from backend.exceptions import ServerError
+from backend.utils.correlation import get_correlation_id
+from backend.utils.encoders import EncodableResponses, JSONEncoder
 from backend.schemas.base import PydanticSchema, camel_case_alias_generator
+
+if TYPE_CHECKING:
+    from fastapi import BackgroundTasks
+
+    from backend.exceptions import DomainError, ServerError
 
 
 class ErrorContent(PydanticSchema):
@@ -87,14 +92,15 @@ class APIResponse(JSONResponse):
             detail = 'An error occurred processing your request.'
 
         code = code or 'about:blank'
-        response_content = JSONErrorSchema(
+        response_content = ErrorContent(
             error_type=error_type,
             status=status,
             code=code,
             message=detail,
-            correlation_id=correlation_id.get(),
+            correlation_id=get_correlation_id(default='N/A'),
             context=context,
         )
+
         return cls(
             content=response_content,
             status_code=status,
@@ -104,12 +110,12 @@ class APIResponse(JSONResponse):
     @classmethod
     def domain_problem(
         cls,
-        domain_error: APIError,
+        domain_error: DomainError,
         *,
         headers: dict[str, str] | None = None,
     ) -> Self:
         return cls(
-            content=JSONErrorSchema.from_domain_error(domain_error),
+            content=ErrorContent.from_domain_error(domain_error),
             status_code=domain_error.status_code,
             headers=headers,
         )

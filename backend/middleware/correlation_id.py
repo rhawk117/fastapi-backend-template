@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from backend.common.correlation import correlation_id, generate_id
+from backend.utils.correlation import correlation_id, generate_id
 from backend.middleware.abstract import ASGIMiddleware
 
 if TYPE_CHECKING:

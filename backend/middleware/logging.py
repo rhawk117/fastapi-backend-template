@@ -3,7 +3,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING
 
-from backend.common.logging import get_loguru_logger
+from backend.logging import get_loguru_logger
 from backend.middleware.abstract import ASGIMiddleware
 
 if TYPE_CHECKING:
