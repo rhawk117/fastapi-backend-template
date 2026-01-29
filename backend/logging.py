@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 from loguru import logger as loguru_logger
 
 from backend import constants
-from backend.core.correlation import correlation_id
+from backend.core.correlation import get_correlation_id
 
 if TYPE_CHECKING:
     from loguru import Logger, Record
@@ -42,7 +42,7 @@ class InterceptHandler(logging.Handler):
 
 def patch_record(record: Record) -> None:
     extra = record['extra']
-    extra.setdefault('correlation_id', correlation_id.get() or 'N/A')
+    extra.setdefault('correlation_id', get_correlation_id(default='N/A'))
 
 
 def should_propagate(name: str) -> bool:
