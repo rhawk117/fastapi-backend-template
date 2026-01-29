@@ -42,7 +42,6 @@ def Problem(  # noqa: N802
     }
 
 
-
 def Tag(  # noqa: N802
     name: str,
     tag_description: str,
