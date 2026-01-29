@@ -1,0 +1,95 @@
+volumes:
+  pgdata: {}
+  uv_cache: {}
+
+networks:
+  backend: {}
+
+services:
+  db:
+    image: postgres:17.6-alpine
+    container_name: kc_postgres_db
+    restart: always
+    networks:
+      - backend
+    env_file:
+      - ./.${APP_ENV:-dev}.env
+    ports:
+      - 5432:5432 # dev only; in prod, use internal networking
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    command: >
+      -c config_file=/etc/postgresql/postgresql.conf
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME:-appdb}
+      POSTGRES_USER: ${DATABASE_USER:-appuser}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      TZ: ${TZ:-UTC}
+      POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
+    healthcheck:
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB -h 127.0.0.1",
+        ]
+
+  redis:
+    image: redis:8.2.2-alpine3.22
+    container_name: kc_redis
+    restart: always
+    env_file:
+      - ./.${APP_ENV:-dev}.env
+    networks:
+      - backend
+    ports:
+      - 6379:6379 # dev only; in prod, use internal networking
+    command: >
+      sh -c '
+        exec redis-server --appendonly no --requirepass "$$REDIS_PASSWORD"
+      '
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'redis-cli --no-auth-warning -a "$$REDIS_PASSWORD" ping | grep -q PONG',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    container_name: kc_backend_server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - backend
+    ports:
+      - 8000:8000
+    env_file:
+      - ./.${APP_ENV:-dev}.env
+    volumes:
+      - uv_cache:/app/uv_cache
+      - ./server:/app/server
+      - ./alembic:/app/alembic
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
+      REDIS_APP_DB: ${REDIS_APP_DB:-0}
+      DATABASE_USER: ${DATABASE_USER:-appuser}
+      DATABASE_NAME: ${DATABASE_NAME:-appdb}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      TZ: ${TZ:-UTC}
