@@ -7,15 +7,19 @@ from typing import cast
 from pydantic import ValidationError
 from pydantic.fields import FieldInfo
 from pydantic_settings import BaseSettings
-from redis.multidb.config import DatabaseConfig
 
 from backend.schemas.errors import PydanticError
-from backend.settings.configs import AuthConfig, RedisConfig, ServerConfig
+from backend.settings.configs import (
+    AuthConfig,
+    DatabaseConfig,
+    RedisConfig,
+    ServerConfig,
+)
 
 
 @dc.dataclass(slots=True)
 class AppConfig:
-    auth: AuthConfig = dc.field(default_factory=AuthConfig)  # type: ignore 
+    auth: AuthConfig = dc.field(default_factory=AuthConfig)  # type: ignore
     server: ServerConfig = dc.field(default_factory=ServerConfig)  # type: ignore
     database: DatabaseConfig = dc.field(default_factory=DatabaseConfig)  # type: ignore
     redis: RedisConfig = dc.field(default_factory=RedisConfig)  # type: ignore
