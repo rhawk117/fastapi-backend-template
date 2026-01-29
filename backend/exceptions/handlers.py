@@ -2,7 +2,6 @@
 Implementation of exception handlers for the API, ensures all exceptions
 are handled, logged and returned in to the client in a consistent manner.
 """
-
 import logging
 
 from fastapi import Request, status

@@ -10,7 +10,9 @@ from pydantic_settings import BaseSettings
 
 from backend.schemas.errors import PydanticError
 from backend.settings.configs import (
+    Argon2Config,
     AuthConfig,
+    CorsConfig,
     DatabaseConfig,
     RedisConfig,
     ServerConfig,
@@ -23,6 +25,8 @@ class AppConfig:
     server: ServerConfig = dc.field(default_factory=ServerConfig)  # type: ignore
     database: DatabaseConfig = dc.field(default_factory=DatabaseConfig)  # type: ignore
     redis: RedisConfig = dc.field(default_factory=RedisConfig)  # type: ignore
+    cors: CorsConfig = dc.field(default_factory=CorsConfig)
+    argon2: Argon2Config = dc.field(default_factory=Argon2Config)
 
     @classmethod
     def config_classes(cls) -> Iterator[type[BaseSettings]]:

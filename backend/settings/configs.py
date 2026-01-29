@@ -1,13 +1,10 @@
 import base64
-import dataclasses as dc
-import functools
-import os
 import secrets
 import urllib.parse as urlib_parse
-from typing import Any, Literal
+from typing import Any, Literal, Self
 
 from cryptography.fernet import Fernet
-from pydantic import SecretBytes, SecretStr, ValidationError
+from pydantic import SecretBytes, SecretStr
 from pydantic_settings import SettingsConfigDict
 from sqlalchemy import URL as SqlURL  # noqa: N811
 
@@ -35,6 +32,7 @@ def generate_secret_bytes(nbytes: int = 16) -> bytes:
 def generate_secret_str(*, length: int = 32) -> str:
     return secrets.token_urlsafe(length)
 
+
 def create_redis_url(
     host: str,
     *,
@@ -54,6 +52,7 @@ def create_redis_url(
         auth_part = f':{encoded_password}@'
 
     return f'{scheme}{auth_part}{host}:{port}/'
+
 
 class AuthConfig(SettingsModel):
     PBKDF2_SALT: SecretBytes
@@ -88,10 +87,12 @@ class AuthConfig(SettingsModel):
         env_prefix='AUTH_',
     )
 
+
 class RedisConfig(SettingsModel):
     """
     Redis related environment configuration with env prefix `REDIS_`
     """
+
     model_config = SettingsConfigDict(env_prefix='REDIS_')
 
     HOST: str = 'redis'
@@ -111,7 +112,7 @@ class RedisConfig(SettingsModel):
             user=self.USER,
             password=self.PASSWORD.get_secret_value(),
             port=self.PORT,
-            scheme=self.SCHEME
+            scheme=self.SCHEME,
         )
 
     def client_kwargs(self) -> dict:
@@ -127,9 +128,7 @@ class RedisConfig(SettingsModel):
 
     @classmethod
     def generate_required_fields(cls) -> dict[str, Any]:
-        return {
-            'PASSWORD': generate_secret_str()
-        }
+        return {'PASSWORD': generate_secret_str()}
 
 
 class DatabaseConfig(SettingsModel):
@@ -193,65 +192,49 @@ class ServerConfig(SettingsModel):
     )
 
 
-@dc.dataclass(slots=True, frozen=True)
-class AppConfig:
-    auth: AuthConfig = dc.field(default_factory=AuthConfig)  # type: ignore
-    server: ServerConfig = dc.field(default_factory=ServerConfig)  # type: ignore
-    database: DatabaseConfig = dc.field(default_factory=DatabaseConfig)  # type: ignore
+class Argon2Config(SettingsModel):
+    model_config = SettingsConfigDict(env_prefix='ARGON2_')
+
+    TIME_COST: int = 2
+    MEMORY_COST: int = 19456
+    PARALLELISM: int = 1
+    HASH_LEN: int = 32
+    SALT_LEN: int = 16
+
+    @classmethod
+    def fast(cls) -> Self:
+        return cls(
+            TIME_COST=1,
+            MEMORY_COST=8192,
+            PARALLELISM=1,
+            HASH_LEN=16,
+            SALT_LEN=16,
+        )
+
+    @classmethod
+    def secure(cls) -> Self:
+        return cls(
+            TIME_COST=4,
+            MEMORY_COST=65536,
+            PARALLELISM=2,
+            HASH_LEN=64,
+            SALT_LEN=16,
+        )
+
+    def hasher_kwargs(self) -> dict:
+        return {
+            'time_cost': self.TIME_COST,
+            'memory_cost': self.MEMORY_COST,
+            'parallelism': self.PARALLELISM,
+            'hash_len': self.HASH_LEN,
+            'salt_len': self.SALT_LEN,
+        }
 
 
+class CorsConfig(SettingsModel):
+    model_config = SettingsConfigDict(env_prefix='CORS_')
 
-
-def generate_app_config(
-    *,
-    secret_key: str | None = None,
-    fernet_key: str | None = None,
-    pbkdf2_salt: bytes | None = None,
-    database_password: str | None = None,
-) -> AppConfig:
-    """Generate an AppConfig with all required secrets.
-
-    If secrets are not provided, they will be generated automatically.
-    This is useful for initial setup or testing environments.
-    """
-    auth = AuthConfig(
-        SECRET_KEY=SecretStr(secret_key or secrets.token_urlsafe(32)),
-        FERNET_KEY=SecretStr(fernet_key or generate_fernet_key()),
-        PBKDF2_SALT=SecretBytes(pbkdf2_salt or os.urandom(16)),
-    )
-
-    server = ServerConfig()
-
-    database = DatabaseConfig(
-        PASSWORD=SecretStr(database_password or secrets.token_urlsafe(24)),
-    )
-
-    return AppConfig(auth=auth, server=server, database=database)
-
-
-def export_app_config(config: AppConfig) -> dict[str, str]:
-    env_vars: dict[str, str] = {}
-
-    config_mapping: list[tuple[str, SettingsModel]] = [
-        ('AUTH_', config.auth),
-        ('SERVER_', config.server),
-        ('DATABASE_', config.database),
-    ]
-
-    for prefix, settings in config_mapping:
-        dumped = settings.model_dump()
-        for key, value in dumped.items():
-            env_key = f'{prefix}{key}'
-            env_vars[env_key] = _serialize_env_value(value)
-
-    return env_vars
-
-
-def _serialize_env_value(value: object) -> str:
-    match value:
-        case bool():
-            return str(value).lower()
-        case bytes():
-            return base64.urlsafe_b64encode(value).decode('ascii')
-        case _:
-            return str(value)
+    ALLOW_ORIGINS: list[str] = ['*']
+    ALLOW_CREDENTIALS: bool = True
+    ALLOW_METHODS: list[str] = ['*']
+    ALLOW_HEADERS: list[str] = ['*']
